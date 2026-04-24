@@ -1,5 +1,9 @@
 > English version: [docs/README.en.md](docs/README.en.md)
 
+<div align="center">
+  <img src="assets/logo.png" alt="samsara" width="160" />
+</div>
+
 # samsara
 
 [![CI](https://github.com/mocikadev/mocika-samsara/actions/workflows/ci.yml/badge.svg)](https://github.com/mocikadev/mocika-samsara/actions/workflows/ci.yml)
