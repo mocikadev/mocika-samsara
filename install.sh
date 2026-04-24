@@ -45,6 +45,10 @@ case "${LANG:-}" in
     MSG_HINT="运行 %ssamsara --help%s 开始使用。"
     MSG_UNSUPPORTED_ARCH="不支持的架构：%s（%s）"
     MSG_UNSUPPORTED_OS="不支持的操作系统：%s（仅支持 Linux / macOS）"
+    MSG_SKM_FOUND="skm 已安装："
+    MSG_SKM_INSTALLING="未检测到 skm，正在自动安装..."
+    MSG_SKM_INSTALL_OK="skm 安装完成。"
+    MSG_SKM_INSTALL_FAIL="skm 自动安装失败，请手动安装：https://github.com/mocikadev/mocika-skills-cli"
     ;;
   *)
     MSG_TITLE="Installing samsara — AI Agent knowledge management CLI"
@@ -66,6 +70,10 @@ case "${LANG:-}" in
     MSG_HINT="Run %ssamsara --help%s to get started."
     MSG_UNSUPPORTED_ARCH="Unsupported architecture: %s (%s)"
     MSG_UNSUPPORTED_OS="Unsupported OS: %s (only Linux / macOS are supported)"
+    MSG_SKM_FOUND="skm already installed:"
+    MSG_SKM_INSTALLING="skm not found, installing automatically..."
+    MSG_SKM_INSTALL_OK="skm installed successfully."
+    MSG_SKM_INSTALL_FAIL="skm auto-install failed. Install manually: https://github.com/mocikadev/mocika-skills-cli"
     ;;
 esac
 
@@ -155,6 +163,44 @@ verify_checksum() {
   ok "$MSG_CHECKSUM_OK"
 }
 
+# ---------------------------------------------------------------------------
+# 检查并自动安装 skm（samsara 的技能包管理器基础设施）
+# ---------------------------------------------------------------------------
+install_skm_if_needed() {
+  local skm_bin
+  if command -v skm >/dev/null 2>&1; then
+    ok "$MSG_SKM_FOUND $(skm --version 2>&1 || true)"
+    return 0
+  fi
+  skm_bin="$HOME/.local/bin/skm"
+  if [ -x "$skm_bin" ]; then
+    ok "$MSG_SKM_FOUND $("$skm_bin" --version 2>&1 || true)"
+    return 0
+  fi
+
+  printf "\n"
+  info "$MSG_SKM_INSTALLING"
+
+  local skm_install_url="https://raw.githubusercontent.com/mocikadev/mocika-skills-cli/main/install.sh"
+  local tmp_script
+  tmp_script=$(mktemp)
+  # shellcheck disable=SC2064
+  trap "rm -f '$tmp_script'" EXIT
+
+  if ! download "$skm_install_url" "$tmp_script" 2>/dev/null; then
+    warn "$MSG_SKM_INSTALL_FAIL"
+    return 0
+  fi
+
+  if bash "$tmp_script"; then
+    ok "$MSG_SKM_INSTALL_OK"
+  else
+    warn "$MSG_SKM_INSTALL_FAIL"
+  fi
+
+  rm -f "$tmp_script"
+}
+
 main() {
   printf "\n${BOLD}%s${RESET}\n\n" "$MSG_TITLE"
 
@@ -191,6 +237,8 @@ main() {
     warn "$(printf "$MSG_PATH_WARN" "$INSTALL_DIR")"
     printf "\n  ${BOLD}export PATH=\"\$HOME/.local/bin:\$PATH\"${RESET}\n"
   fi
+
+  install_skm_if_needed
 
   printf "\n${GREEN}${BOLD}%s${RESET} $(printf "$MSG_HINT" "${BOLD}" "${RESET}")\n\n" "$MSG_DONE"
 }

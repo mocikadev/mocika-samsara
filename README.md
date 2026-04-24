@@ -20,24 +20,31 @@
 
 ## 快速开始
 
-### 1. 安装 samsara
+### 1. 安装 skm
+
+[`skm`](https://github.com/mocikadev/mocika-skills-cli) 是 samsara 的技能包管理器，负责安装和管理 AI Agent skill，需要先安装：
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/mocikadev/mocika-skills-cli/main/install.sh | bash
+```
+
+### 2. 安装 samsara
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/mocikadev/mocika-samsara/main/install.sh | bash
 ```
 
-安装到 `~/.local/bin/samsara`，无需 Rust 环境，git 需在 PATH 中。
+安装到 `~/.local/bin/samsara`，无需 Rust 环境，git 需在 PATH 中。安装脚本会自动检测 skm 是否已安装。
 
-### 2. 初始化知识库
+### 3. 初始化知识库
 
 ```bash
 samsara init
 ```
 
-初始化会创建 `~/.agents/knowledge/` 并在 `~/.agents/AGENTS.md` 中注入自我进化协议。
-如果已安装 [`skm`](https://github.com/mocikadev/mocika-skills-cli)，还会自动安装配套的 `self-evolution` skill。
+初始化会创建 `~/.agents/knowledge/` 并在 `~/.agents/AGENTS.md` 中注入自我进化协议，同时自动安装配套的 `self-evolution` skill。
 
-### 3. 配置 MCP（让 AI 接管）
+### 4. 配置 MCP（让 AI 接管）
 
 **OpenCode** — 编辑 `~/.config/opencode/opencode.json`：
 

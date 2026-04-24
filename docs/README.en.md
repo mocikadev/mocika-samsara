@@ -20,24 +20,31 @@ Most AI tools just "follow instructions". **samsara** solves a different problem
 
 ## Quick Start
 
-### 1. Install samsara
+### 1. Install skm
+
+[`skm`](https://github.com/mocikadev/mocika-skills-cli) is samsara's skill package manager — it handles installing and managing AI Agent skills and must be installed first:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/mocikadev/mocika-skills-cli/main/install.sh | bash
+```
+
+### 2. Install samsara
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/mocikadev/mocika-samsara/main/install.sh | bash
 ```
 
-Installs to `~/.local/bin/samsara`. No Rust toolchain required; git must be in PATH.
+Installs to `~/.local/bin/samsara`. No Rust toolchain required; git must be in PATH. The install script automatically checks whether skm is present.
 
-### 2. Initialize the knowledge base
+### 3. Initialize the knowledge base
 
 ```bash
 samsara init
 ```
 
-Creates `~/.agents/knowledge/` and injects the self-evolution protocol into `~/.agents/AGENTS.md`.
-If [`skm`](https://github.com/mocikadev/mocika-skills-cli) is installed, the `self-evolution` skill is installed automatically.
+Creates `~/.agents/knowledge/`, injects the self-evolution protocol into `~/.agents/AGENTS.md`, and installs the `self-evolution` skill automatically.
 
-### 3. Configure MCP (let AI take over)
+### 4. Configure MCP (let AI take over)
 
 **OpenCode** — edit `~/.config/opencode/opencode.json`:
 
