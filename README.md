@@ -1,20 +1,59 @@
 > English version: [docs/README.en.md](docs/README.en.md)
 
 <div align="center">
-  <img src="assets/logo.png" alt="samsara" width="160" />
-</div>
 
-# samsara
+<img src="assets/logo.png" height="60" alt="samsara" />&nbsp;&nbsp;&nbsp;<strong>samsara &nbsp;·&nbsp; 轮回</strong>
+
+<sub>AI Agent 知识管理 CLI — 让经验随轮回积累，不再重蹈覆辙</sub>
+
+<br/>
 
 [![CI](https://github.com/mocikadev/mocika-samsara/actions/workflows/ci.yml/badge.svg)](https://github.com/mocikadev/mocika-samsara/actions/workflows/ci.yml)
 [![Latest Release](https://img.shields.io/github/v/release/mocikadev/mocika-samsara)](https://github.com/mocikadev/mocika-samsara/releases/latest)
 
-AI Agent 知识管理 CLI。让 AI 像人一样积累经验——遇到错误记下来，多次遇到晋升为规则，规则沉淀进 AGENTS.md。
+</div>
 
-与 [`skm`](https://github.com/mocikadev/mocika-skills-cli) 共同构成 Samsara 知识系统的工具层：
+---
 
-- **skm** 管理技能包（`~/.agents/skills/`，Layer 1）
-- **samsara** 管理知识教训（`~/.agents/knowledge/`，Layer 2）
+大多数 AI 工具只会"按指令执行"。**samsara** 想解决的是：AI 如何像人一样从经验中学习——遇到错误记录下来，反复踩坑后晋升为规则，规则写进 AGENTS.md，下次启动自动生效，永不重蹈覆辙。
+
+## 三层知识体系
+
+与 [`skm`](https://github.com/mocikadev/mocika-skills-cli) 共同构成完整的 Samsara AI 知识系统：
+
+```
+  AI 工具启动时自动读取
+         │
+         ▼
+┌─────────────────────────────────────────────┐
+│  Layer 0 · AGENTS.md · 永久生效层            │
+│  已晋升的 layer0 规则，每次会话强制加载      │
+└──────────────────┬──────────────────────────┘
+      promote --layer0 写入 ↑
+                   │
+      ┌────────────┴────────────┐
+      │                         │
+┌─────┴──────────────┐  ┌───────┴──────────────────┐
+│ Layer 1 · skm       │  │ Layer 2 · samsara          │
+│ ~/.agents/skills/   │  │ ~/.agents/knowledge/       │
+│ 技能包（行为模板）  │  │ lessons/ → rules/          │
+│ self-evolution 等   │  │ 教训记录 → 晋升为规则      │
+└────────────────────┘  └──────────────────────────┘
+```
+
+## 为什么不用别的方案？
+
+| 能力 | 手动维护 AGENTS.md | Mem0 | Zep | LangChain Memory | **samsara** |
+|------|:---:|:---:|:---:|:---:|:---:|
+| 结构化教训记录 | ❌ | ❌ | ❌ | ❌ | ✅ |
+| 渐进式晋升（occurrences 计数）| ❌ | ❌ | ❌ | ❌ | ✅ |
+| 自动写入 AGENTS.md | ⚠️ 手动 | ❌ | ❌ | ❌ | ✅ |
+| 无需 LLM / embedding | ✅ | ❌ | ❌ | ❌ | ✅ |
+| MCP 原生集成 | ❌ | ❌ | ❌ | ❌ | ✅ |
+| 多设备 git 同步 | ⚠️ 手动 | ❌ | ❌ | ❌ | ✅ |
+| 本地优先、数据自有 | ✅ | ❌ | ❌ | ❌ | ✅ |
+| 零依赖安装（单二进制）| ✅ | ❌ | ❌ | ❌ | ✅ |
+| 跨 AI 工具通用 | ✅ | ⚠️ | ⚠️ | ⚠️ | ✅ |
 
 ## 特性
 

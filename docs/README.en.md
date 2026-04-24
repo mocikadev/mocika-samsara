@@ -1,20 +1,59 @@
 > 中文版本：[README.md](../README.md)
 
 <div align="center">
-  <img src="../assets/logo.png" alt="samsara" width="160" />
-</div>
 
-# samsara
+<img src="../assets/logo.png" height="60" alt="samsara" />&nbsp;&nbsp;&nbsp;<strong>samsara &nbsp;·&nbsp; 輪廻</strong>
+
+<sub>AI Agent Knowledge Management CLI — Let experience accumulate through every cycle</sub>
+
+<br/>
 
 [![CI](https://github.com/mocikadev/mocika-samsara/actions/workflows/ci.yml/badge.svg)](https://github.com/mocikadev/mocika-samsara/actions/workflows/ci.yml)
 [![Latest Release](https://img.shields.io/github/v/release/mocikadev/mocika-samsara)](https://github.com/mocikadev/mocika-samsara/releases/latest)
 
-A knowledge management CLI for AI Agents. Lets AI accumulate experience like a human — log errors as lessons, promote repeated ones to rules, and surface rules in AGENTS.md automatically.
+</div>
 
-Works alongside [`skm`](https://github.com/mocikadev/mocika-skills-cli) as the Samsara knowledge system toolchain:
+---
 
-- **skm** manages skill packages (`~/.agents/skills/`, Layer 1)
-- **samsara** manages knowledge lessons (`~/.agents/knowledge/`, Layer 2)
+Most AI tools just "follow instructions". **samsara** solves a different problem: how can AI learn from experience like a human — log errors as lessons, promote repeated ones to rules, write rules into AGENTS.md, and never repeat the same mistake again.
+
+## Three-Layer Knowledge System
+
+Works alongside [`skm`](https://github.com/mocikadev/mocika-skills-cli) as the complete Samsara AI knowledge system:
+
+```
+  Loaded automatically on AI startup
+         │
+         ▼
+┌─────────────────────────────────────────────┐
+│  Layer 0 · AGENTS.md · Permanent layer      │
+│  Promoted layer0 rules, loaded every session│
+└──────────────────┬──────────────────────────┘
+      promote --layer0 ↑
+                   │
+      ┌────────────┴────────────┐
+      │                         │
+┌─────┴──────────────┐  ┌───────┴──────────────────┐
+│ Layer 1 · skm       │  │ Layer 2 · samsara          │
+│ ~/.agents/skills/   │  │ ~/.agents/knowledge/       │
+│ Skill packages      │  │ lessons/ → rules/          │
+│ self-evolution etc. │  │ Log lessons → promote rules│
+└────────────────────┘  └──────────────────────────┘
+```
+
+## Why Not Something Else?
+
+| Capability | Manual AGENTS.md | Mem0 | Zep | LangChain Memory | **samsara** |
+|------------|:---:|:---:|:---:|:---:|:---:|
+| Structured lesson logging | ❌ | ❌ | ❌ | ❌ | ✅ |
+| Progressive promotion (occurrences) | ❌ | ❌ | ❌ | ❌ | ✅ |
+| Auto-write to AGENTS.md | ⚠️ manual | ❌ | ❌ | ❌ | ✅ |
+| No LLM / embedding needed | ✅ | ❌ | ❌ | ❌ | ✅ |
+| Native MCP integration | ❌ | ❌ | ❌ | ❌ | ✅ |
+| Multi-device git sync | ⚠️ manual | ❌ | ❌ | ❌ | ✅ |
+| Local-first, data ownership | ✅ | ❌ | ❌ | ❌ | ✅ |
+| Zero-dependency install (single binary) | ✅ | ❌ | ❌ | ❌ | ✅ |
+| Works across AI tools | ✅ | ⚠️ | ⚠️ | ⚠️ | ✅ |
 
 ## Features
 
