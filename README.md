@@ -2,7 +2,8 @@
 
 <div align="center">
 
-<img src="assets/logo.png" height="60" alt="samsara" />&nbsp;&nbsp;&nbsp;<strong>samsara &nbsp;·&nbsp; 轮回</strong>
+<img src="assets/logo.png" height="120" alt="samsara" /><br/>
+<strong>samsara · 轮回</strong>
 
 <sub>AI Agent 知识管理 CLI — 让经验随轮回积累，不再重蹈覆辙</sub>
 
@@ -16,6 +17,131 @@
 ---
 
 大多数 AI 工具只会"按指令执行"。**samsara** 想解决的是：AI 如何像人一样从经验中学习——遇到错误记录下来，反复踩坑后晋升为规则，规则写进 AGENTS.md，下次启动自动生效，永不重蹈覆辙。
+
+## 快速开始
+
+### 1. 安装 samsara
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/mocikadev/mocika-samsara/main/install.sh | bash
+```
+
+安装到 `~/.local/bin/samsara`，无需 Rust 环境，git 需在 PATH 中。
+
+### 2. 初始化知识库
+
+```bash
+samsara init
+```
+
+初始化会创建 `~/.agents/knowledge/` 并在 `~/.agents/AGENTS.md` 中注入自我进化协议。
+如果已安装 [`skm`](https://github.com/mocikadev/mocika-skills-cli)，还会自动安装配套的 `self-evolution` skill。
+
+### 3. 配置 MCP（让 AI 接管）
+
+**OpenCode** — 编辑 `~/.config/opencode/opencode.json`：
+
+```json
+{
+  "$schema": "https://opencode.ai/config.json",
+  "mcp": {
+    "samsara": {
+      "type": "local",
+      "command": ["samsara", "mcp", "serve"]
+    }
+  }
+}
+```
+
+**Claude Code** — 编辑 `~/.claude/claude_desktop_config.json`：
+
+```json
+{
+  "mcpServers": {
+    "samsara": {
+      "command": "samsara",
+      "args": ["mcp", "serve"]
+    }
+  }
+}
+```
+
+配置完成后重启 AI 工具，samsara 进程由工具按需自动启动，无需手动运行。
+
+---
+
+## 安装 self-evolution skill
+
+`self-evolution` 是配套的 AI Agent 技能包，让 AI 助手知道**何时**以及**如何**调用 samsara，无需你手动提示：
+
+```bash
+skm install mocikadev/mocika-samsara:skills/self-evolution --link-to all
+```
+
+> 如果 `samsara init` 时已安装 skm，skill 会自动安装，无需手动执行。
+
+安装后，AI 会自动：
+
+- 遇到错误或踩坑 → 调用 `samsara_write_lesson` 记录教训
+- 开始任务前 → 调用 `samsara_search_knowledge` 检索已有经验
+- 发现高频错误 → 主动建议 `samsara_promote_lesson`
+
+## 首次激活示例
+
+第一次和 AI 对话时，AI 会先检索知识库，然后正常工作。遇到第一个可归纳的问题时，AI 会自动记录：
+
+> **AI**：发现一个可归纳的错误，正在记录到知识库……
+>
+> *调用 `samsara_write_lesson`*
+> ```
+> domain:  rust
+> keyword: cargo-fmt-order
+> summary: 提交前顺序必须是 cargo fmt → clippy → test，顺序颠倒会导致 CI 失败
+> type:    error
+> ```
+>
+> ✅ 已记录，再次遇到时会自动关联。
+
+当同一问题出现 3 次后，AI 会主动建议晋升：
+
+> **AI**：`rust/cargo-fmt-order` 已出现 3 次，建议晋升为规则写入 AGENTS.md，以后每次启动都会提醒。要晋升吗？
+
+---
+
+## 迁移已有知识库
+
+如果你在 `AGENTS.md` 或 `lessons-learned.md` 中已有积累，可以迁移进来。
+
+**方式一：让 AI 帮你批量迁移**
+
+把已有的经验文本发给 AI，告诉它：
+
+> 请把以下内容逐条用 `samsara_write_lesson` 写入知识库，domain 根据内容归类，type 选 error / skill / pattern / insight 之一。
+
+AI 会自动调用 MCP 逐条写入，无需手动操作。
+
+**方式二：手动逐条迁移**
+
+```bash
+samsara write rust cargo-fmt --summary "提交前：fmt → clippy → test" --type error
+samsara write git commit   --summary "commit 格式：type: 中文描述" --type skill
+```
+
+---
+
+## 数据目录
+
+```
+~/.agents/
+├── knowledge/
+│   ├── lessons/         # 教训文件（按 domain 分目录）
+│   ├── rules/           # 已晋升的规则（rules/<domain>.md）
+│   ├── archive/         # 归档的教训
+│   ├── INDEX.md         # 全量索引（自动维护）
+│   └── log.md           # 操作日志
+├── AGENTS.md            # 自进化协议 + 晋升的 layer0 规则
+└── samsara.toml         # 配置（同步远端等）
+```
 
 ## 三层知识体系
 
@@ -55,133 +181,6 @@
 | 零依赖安装（单二进制）| ✅ | ❌ | ❌ | ❌ | ✅ |
 | 跨 AI 工具通用 | ✅ | ⚠️ | ⚠️ | ⚠️ | ✅ |
 
-## 特性
-
-- **自我进化**：遇到错误 → 记录教训 → 多次触发 → 晋升规则 → 写入 AGENTS.md，AI 下次启动即生效
-- **MCP 集成**：配置一次，AI 自动调用，无需手动执行命令
-- **纯文件存储**：无数据库、无 daemon，knowledge/ 就是一个 git 仓库
-- **多设备同步**：`samsara push` / `samsara pull`，知识库跟着走
-- **零 root 权限**：全部数据写入 `~/.agents/`，无需 sudo
-
-## 安装 samsara
-
-```bash
-curl -fsSL https://raw.githubusercontent.com/mocikadev/mocika-samsara/main/install.sh | bash
-```
-
-安装到 `~/.local/bin/samsara`，无需 Rust 环境，git 需在 PATH 中。如需自定义路径：
-
-```bash
-SAMSARA_INSTALL_DIR=/usr/local/bin bash <(curl -fsSL https://raw.githubusercontent.com/mocikadev/mocika-samsara/main/install.sh)
-```
-
-安装指定版本：
-
-```bash
-SAMSARA_VERSION=v0.1.0 bash <(curl -fsSL https://raw.githubusercontent.com/mocikadev/mocika-samsara/main/install.sh)
-```
-
-## 快速上手
-
-```bash
-# 1. 初始化知识库
-samsara init
-
-# 2. 遇到错误，记下来
-samsara write rust cargo-fmt --summary "提交前顺序：cargo fmt → clippy → test" --type error
-
-# 3. 再次踩坑，occurrences +1
-samsara write rust cargo-fmt
-
-# 4. 出现 3 次后晋升为规则
-samsara promote rust cargo-fmt
-
-# 5. 晋升到 AGENTS.md（AI 每次启动都会读到）
-samsara promote rust cargo-fmt --layer0
-```
-
-## 安装 self-evolution skill（推荐）
-
-`self-evolution` 是配套的 AI Agent 技能包，让你的 AI 助手在合适的时机自动调用 samsara，无需手动提示：
-
-```bash
-skm install mocikadev/mocika-samsara:skills/self-evolution --link-to all
-```
-
-或通过 `samsara init` 自动安装（需已安装 skm）。
-
-> 安装后，AI Agent 会自动记录教训、检索经验、推荐晋升，无需用户提醒。
-
-## AI 工具集成
-
-配置一次，AI 直接通过 MCP 调用 samsara，无需手动执行命令。
-
-**OpenCode** — 编辑 `~/.config/opencode/opencode.json`：
-
-```json
-{
-  "$schema": "https://opencode.ai/config.json",
-  "mcp": {
-    "samsara": {
-      "type": "local",
-      "command": ["samsara", "mcp", "serve"]
-    }
-  }
-}
-```
-
-**Claude Code** — 编辑 `~/.claude/claude_desktop_config.json`：
-
-```json
-{
-  "mcpServers": {
-    "samsara": {
-      "command": "samsara",
-      "args": ["mcp", "serve"]
-    }
-  }
-}
-```
-
-> ⚠️ OpenCode 与 Claude Code 的配置格式不同，不可混用。samsara 进程由工具按需自动启动，无需手动运行。
-
-## 命令速查
-
-| 命令 | 说明 |
-|------|------|
-| `samsara init [--yes]` | 初始化知识库 |
-| `samsara write <domain> <keyword> [--summary "..."] [--type error\|skill\|pattern\|insight] [--verify]` | 写入 / 更新教训 |
-| `samsara search <query> [--domain d] [--type t]` | 搜索知识库 |
-| `samsara promote <domain> <keyword> [--layer0]` | 晋升为规则 / 写入 AGENTS.md |
-| `samsara lint [--fix]` | 检查知识库健康度 |
-| `samsara reflect` | 分析学习模式 |
-| `samsara prime [--limit N] [--domain d]` | 推荐晋升候选 |
-| `samsara archive <domain> <keyword>` | 归档教训 |
-| `samsara demote <pattern> [--yes]` | 从 AGENTS.md 降级规则 |
-| `samsara status` | 知识库统计 |
-| `samsara log [--tail N] [--action t] [--rotate]` | 操作日志 |
-| `samsara skill-note <name> [--fail] [--note "..."]` | 记录 skill 使用结果 |
-| `samsara domain list\|add` | 管理 domain |
-| `samsara remote add\|set\|show` | 管理同步远端 |
-| `samsara push [--dry-run]` | 推送到远端 |
-| `samsara pull` | 从远端拉取 |
-| `samsara self-update [--check]` | 升级到最新版本 |
-| `samsara mcp serve` | 启动 MCP 服务（由 AI 工具自动调用）|
-
-## 数据目录
-
-```
-~/.agents/
-├── knowledge/
-│   ├── lessons/         # 教训文件（按 domain 分目录）
-│   ├── rules/           # 已晋升的规则（rules/<domain>.md）
-│   ├── archive/         # 归档的教训
-│   ├── INDEX.md         # 全量索引（自动维护）
-│   └── log.md           # 操作日志
-├── AGENTS.md            # 自进化协议 + 晋升的 layer0 规则
-└── samsara.toml         # 配置（同步远端等）
-```
-
 ## 平台支持
 
 | 平台 | 架构 | 状态 |
@@ -202,6 +201,10 @@ cargo build --release
 ```
 
 需要 Rust 1.88+。
+
+## 命令参考
+
+完整命令列表见 [docs/commands.md](docs/commands.md)。
 
 ## 许可证
 

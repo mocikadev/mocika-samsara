@@ -2,7 +2,8 @@
 
 <div align="center">
 
-<img src="../assets/logo.png" height="60" alt="samsara" />&nbsp;&nbsp;&nbsp;<strong>samsara &nbsp;·&nbsp; 輪廻</strong>
+<img src="../assets/logo.png" height="120" alt="samsara" /><br/>
+<strong>samsara &nbsp;·&nbsp; 輪廻</strong>
 
 <sub>AI Agent Knowledge Management CLI — Let experience accumulate through every cycle</sub>
 
@@ -16,6 +17,131 @@
 ---
 
 Most AI tools just "follow instructions". **samsara** solves a different problem: how can AI learn from experience like a human — log errors as lessons, promote repeated ones to rules, write rules into AGENTS.md, and never repeat the same mistake again.
+
+## Quick Start
+
+### 1. Install samsara
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/mocikadev/mocika-samsara/main/install.sh | bash
+```
+
+Installs to `~/.local/bin/samsara`. No Rust toolchain required; git must be in PATH.
+
+### 2. Initialize the knowledge base
+
+```bash
+samsara init
+```
+
+Creates `~/.agents/knowledge/` and injects the self-evolution protocol into `~/.agents/AGENTS.md`.
+If [`skm`](https://github.com/mocikadev/mocika-skills-cli) is installed, the `self-evolution` skill is installed automatically.
+
+### 3. Configure MCP (let AI take over)
+
+**OpenCode** — edit `~/.config/opencode/opencode.json`:
+
+```json
+{
+  "$schema": "https://opencode.ai/config.json",
+  "mcp": {
+    "samsara": {
+      "type": "local",
+      "command": ["samsara", "mcp", "serve"]
+    }
+  }
+}
+```
+
+**Claude Code** — edit `~/.claude/claude_desktop_config.json`:
+
+```json
+{
+  "mcpServers": {
+    "samsara": {
+      "command": "samsara",
+      "args": ["mcp", "serve"]
+    }
+  }
+}
+```
+
+Restart your AI tool after saving. The samsara process is started on demand — no manual startup needed.
+
+---
+
+## Install self-evolution skill
+
+`self-evolution` is the companion AI Agent skill package that tells your AI assistant **when** and **how** to call samsara — no prompting required:
+
+```bash
+skm install mocikadev/mocika-samsara:skills/self-evolution --link-to all
+```
+
+> If skm was already installed when you ran `samsara init`, the skill was installed automatically.
+
+Once installed, your AI will automatically:
+
+- Hit an error or repeated pitfall → call `samsara_write_lesson` to log it
+- Start a new task → call `samsara_search_knowledge` to surface relevant experience
+- Detect high-frequency errors → proactively suggest `samsara_promote_lesson`
+
+## First-run example
+
+On the first conversation, AI searches the knowledge base (empty), then works normally. When it encounters a noteworthy error, it logs it automatically:
+
+> **AI**: Found a recurring pattern worth logging.
+>
+> *Calling `samsara_write_lesson`*
+> ```
+> domain:  rust
+> keyword: cargo-fmt-order
+> summary: Pre-commit order must be cargo fmt → clippy → test; wrong order breaks CI
+> type:    error
+> ```
+>
+> ✅ Logged. Will surface automatically next time.
+
+After the same issue appears 3 times, AI will proactively suggest promotion:
+
+> **AI**: `rust/cargo-fmt-order` has occurred 3 times. Promote it to a rule in AGENTS.md so it's loaded on every startup?
+
+---
+
+## Migrate an existing knowledge base
+
+If you already have experience accumulated in `AGENTS.md` or a `lessons-learned.md`, you can migrate it in.
+
+**Option 1: Let AI batch-migrate for you**
+
+Paste your existing notes into the chat and tell the AI:
+
+> Please write each item below into the knowledge base using `samsara_write_lesson`. Infer the domain from context; choose type from error / skill / pattern / insight.
+
+AI will call the MCP tool for each entry — no manual work needed.
+
+**Option 2: Migrate manually**
+
+```bash
+samsara write rust   cargo-fmt  --summary "Pre-commit: fmt → clippy → test" --type error
+samsara write git    commit-msg --summary "Format: type: description in Chinese"  --type skill
+```
+
+---
+
+## Data directory
+
+```
+~/.agents/
+├── knowledge/
+│   ├── lessons/         # Lesson files (organized by domain)
+│   ├── rules/           # Promoted rules (rules/<domain>.md)
+│   ├── archive/         # Archived lessons
+│   ├── INDEX.md         # Full index (auto-maintained)
+│   └── log.md           # Operation log
+├── AGENTS.md            # Self-evolution protocol + promoted layer0 rules
+└── samsara.toml         # Config (sync remote, etc.)
+```
 
 ## Three-Layer Knowledge System
 
@@ -55,133 +181,6 @@ Works alongside [`skm`](https://github.com/mocikadev/mocika-skills-cli) as the c
 | Zero-dependency install (single binary) | ✅ | ❌ | ❌ | ❌ | ✅ |
 | Works across AI tools | ✅ | ⚠️ | ⚠️ | ⚠️ | ✅ |
 
-## Features
-
-- **Self-evolution**: Error → log lesson → repeated occurrences → promote to rule → write to AGENTS.md, effective on next AI startup
-- **MCP integration**: Configure once, AI calls samsara automatically, no manual commands needed
-- **Pure file storage**: No database, no daemon — knowledge/ is just a git repository
-- **Multi-device sync**: `samsara push` / `samsara pull` keeps your knowledge base in sync
-- **Zero root required**: All data written to `~/.agents/`, no sudo needed
-
-## Install samsara
-
-```bash
-curl -fsSL https://raw.githubusercontent.com/mocikadev/mocika-samsara/main/install.sh | bash
-```
-
-Installs to `~/.local/bin/samsara`. No Rust toolchain required; git must be in PATH. To use a custom path:
-
-```bash
-SAMSARA_INSTALL_DIR=/usr/local/bin bash <(curl -fsSL https://raw.githubusercontent.com/mocikadev/mocika-samsara/main/install.sh)
-```
-
-To install a specific version:
-
-```bash
-SAMSARA_VERSION=v0.1.0 bash <(curl -fsSL https://raw.githubusercontent.com/mocikadev/mocika-samsara/main/install.sh)
-```
-
-## Quick Start
-
-```bash
-# 1. Initialize the knowledge base
-samsara init
-
-# 2. Hit an error — log it
-samsara write rust cargo-fmt --summary "Pre-commit order: cargo fmt → clippy → test" --type error
-
-# 3. Hit the same issue again — increment occurrences
-samsara write rust cargo-fmt
-
-# 4. After 3 occurrences, promote to a rule
-samsara promote rust cargo-fmt
-
-# 5. Promote to AGENTS.md (AI reads this on every startup)
-samsara promote rust cargo-fmt --layer0
-```
-
-## Install self-evolution skill (recommended)
-
-`self-evolution` is the companion AI Agent skill package that lets your AI assistant automatically call samsara at the right moment — no prompting needed:
-
-```bash
-skm install mocikadev/mocika-samsara:skills/self-evolution --link-to all
-```
-
-Or run `samsara init` to install automatically (requires skm).
-
-> Once installed, your AI Agent will log lessons, search past experience, and recommend promotions on its own.
-
-## AI Tool Integration
-
-Configure once — AI calls samsara directly via MCP, no manual commands needed.
-
-**OpenCode** — edit `~/.config/opencode/opencode.json`:
-
-```json
-{
-  "$schema": "https://opencode.ai/config.json",
-  "mcp": {
-    "samsara": {
-      "type": "local",
-      "command": ["samsara", "mcp", "serve"]
-    }
-  }
-}
-```
-
-**Claude Code** — edit `~/.claude/claude_desktop_config.json`:
-
-```json
-{
-  "mcpServers": {
-    "samsara": {
-      "command": "samsara",
-      "args": ["mcp", "serve"]
-    }
-  }
-}
-```
-
-> ⚠️ OpenCode and Claude Code use different config formats — do not mix them. The samsara process is started on demand by the tool; no manual startup needed.
-
-## Command Reference
-
-| Command | Description |
-|---------|-------------|
-| `samsara init [--yes]` | Initialize the knowledge base |
-| `samsara write <domain> <keyword> [--summary "..."] [--type error\|skill\|pattern\|insight] [--verify]` | Write / update a lesson |
-| `samsara search <query> [--domain d] [--type t]` | Search the knowledge base |
-| `samsara promote <domain> <keyword> [--layer0]` | Promote to rule / write to AGENTS.md |
-| `samsara lint [--fix]` | Check knowledge base health |
-| `samsara reflect` | Analyze learning patterns |
-| `samsara prime [--limit N] [--domain d]` | Top N promotion candidates |
-| `samsara archive <domain> <keyword>` | Archive a lesson |
-| `samsara demote <pattern> [--yes]` | Remove a rule from AGENTS.md |
-| `samsara status` | Knowledge base statistics |
-| `samsara log [--tail N] [--action t] [--rotate]` | Operation log |
-| `samsara skill-note <name> [--fail] [--note "..."]` | Record skill usage result |
-| `samsara domain list\|add` | Manage domains |
-| `samsara remote add\|set\|show` | Manage sync remote |
-| `samsara push [--dry-run]` | Push to remote |
-| `samsara pull` | Pull from remote |
-| `samsara self-update [--check]` | Upgrade to latest version |
-| `samsara mcp serve` | Start MCP server (called automatically by AI tools) |
-
-## Data Directory
-
-```
-~/.agents/
-├── knowledge/
-│   ├── lessons/         # Lesson files (organized by domain)
-│   ├── rules/           # Promoted rules (rules/<domain>.md)
-│   ├── archive/         # Archived lessons
-│   ├── INDEX.md         # Full index (auto-maintained)
-│   └── log.md           # Operation log
-├── AGENTS.md            # Self-evolution protocol + promoted layer0 rules
-└── samsara.toml         # Config (sync remote, etc.)
-```
-
 ## Platform Support
 
 | Platform | Architecture | Status |
@@ -202,6 +201,10 @@ cargo build --release
 ```
 
 Requires Rust 1.88+.
+
+## Command Reference
+
+Full command list: [docs/commands.md](commands.md).
 
 ## License
 
