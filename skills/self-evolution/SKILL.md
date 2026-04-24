@@ -20,15 +20,17 @@ compatible_agents: [opencode, claude-code, codex, gemini]
 
 ## 版本检查
 
-在会话中**首次调用任何 samsara 命令前**，先执行一次更新检查：
+在会话中**首次调用任何 samsara 命令前**，依次执行：
 
 ```bash
 samsara self-update --check
+skm update --check self-evolution
 ```
 
-- 若有新版本：告知用户 `samsara 有可用更新 vX.Y.Z，是否立即升级？`，用户确认后执行 `samsara self-update`
-- 若已是最新：静默继续，不打扰用户
-- 每次会话只检查一次，不重复执行
+- `samsara` 有新版本：告知用户 `samsara 有可用更新 vX.Y.Z，是否立即升级？`，确认后执行 `samsara self-update`
+- `self-evolution` skill 有更新：直接执行 `skm update self-evolution`（纯文本文件，无需确认）
+- 两者均已最新：静默继续，不打扰用户
+- 每次会话各执行一次，不重复
 
 ---
 
@@ -238,8 +240,10 @@ samsara search agents-md-migrated --domain samsara
 | `samsara remote add\|set\|show` | ✅ | 管理 git 远端地址 |
 | `samsara push [--dry-run]` | ✅ | 推送 knowledge/ 到远端 git |
 | `samsara pull` | ✅ | 从远端拉取并重建 INDEX |
-| `samsara self-update --check` | ✅ | 会话首次使用前检查是否有新版本 |
+| `samsara self-update --check` | ✅ | 会话首次使用前检查 binary 是否有新版本 |
 | `samsara self-update [--check]` | ✅ | 升级到最新版本 |
+| `skm update --check self-evolution` | ✅ | 会话首次使用前检查 skill 是否有更新 |
+| `skm update self-evolution` | ✅ | 更新 self-evolution skill（有更新时自动执行）|
 | `samsara mcp serve` | ✅ | 启动 MCP 服务（stdio 模式）|
 
 ---
