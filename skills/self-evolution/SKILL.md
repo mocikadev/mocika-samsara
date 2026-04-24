@@ -1,6 +1,6 @@
 ---
 name: self-evolution
-version: 0.4.0
+version: 0.5.0
 description: Guide AI agents to use samsara CLI for knowledge management
 tags: [samsara, knowledge, lesson, rules, agents-md]
 compatible_agents: [opencode, claude-code, codex, gemini]
@@ -14,6 +14,21 @@ compatible_agents: [opencode, claude-code, codex, gemini]
 - 学到新技能、模式或洞察后想持久化时
 - 需要将高频规则晋升到 AGENTS.md 时
 - 需要记录 skill 使用结果（成功 / 失败）时
+- **每次会话中首次使用 samsara 前**（检查版本更新）
+
+---
+
+## 版本检查
+
+在会话中**首次调用任何 samsara 命令前**，先执行一次更新检查：
+
+```bash
+samsara self-update --check
+```
+
+- 若有新版本：告知用户 `samsara 有可用更新 vX.Y.Z，是否立即升级？`，用户确认后执行 `samsara self-update`
+- 若已是最新：静默继续，不打扰用户
+- 每次会话只检查一次，不重复执行
 
 ---
 
@@ -223,6 +238,7 @@ samsara search agents-md-migrated --domain samsara
 | `samsara remote add\|set\|show` | ✅ | 管理 git 远端地址 |
 | `samsara push [--dry-run]` | ✅ | 推送 knowledge/ 到远端 git |
 | `samsara pull` | ✅ | 从远端拉取并重建 INDEX |
+| `samsara self-update --check` | ✅ | 会话首次使用前检查是否有新版本 |
 | `samsara self-update [--check]` | ✅ | 升级到最新版本 |
 | `samsara mcp serve` | ✅ | 启动 MCP 服务（stdio 模式）|
 

@@ -142,6 +142,17 @@
 
 ---
 
+## v1.0+ Roadmap（待探讨）
+
+> 以下功能已识别，尚未进入设计阶段，需要专项讨论后再定方案。
+
+| 功能 | 描述 | 来源 |
+|------|------|------|
+| **从知识库自动生成 SKILL.md** | 积累足够的同类 lesson 后，自动提炼生成可复用的 SKILL.md 文件；参考 Hermes Agent 的轨迹提炼思路 | `samsara-design.md §3.6.3` |
+| **Layer C：代码扫描层** | 集成 CodeMap/agentmd，支持 `samsara generate-agents-md` 从代码库自动生成 AGENTS.md | `docs/research/layer-c/` |
+
+---
+
 ## 阶段切换记录
 
 | 时间 | 事件 |
