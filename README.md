@@ -1,153 +1,102 @@
 # samsara
 
-AI Agent 知识管理 CLI — 写入、晋升、校验和反思学习教训。
+让 AI Agent 像人一样积累经验——遇到错误记下来，多次遇到晋升为规则，规则沉淀进 AGENTS.md。
 
-与 [`skm`](https://github.com/mocikadev/mocika-skills-cli) 共同构成 Samsara 知识系统的工具层：
-- **skm** 管理 `~/.agents/skills/`（Layer 1，skill 包）
-- **samsara** 管理 `~/.agents/knowledge/`（Layer 2，知识教训）
+与 [`skm`](https://github.com/mocikadev/mocika-skills-cli) 配合使用：
+- **skm** 管理技能包（`~/.agents/skills/`）
+- **samsara** 管理知识教训（`~/.agents/knowledge/`）
 
 ---
 
 ## 安装
 
-**方式 1：一键安装（推荐）**
-
 ```bash
 curl -fsSL https://raw.githubusercontent.com/mocikadev/mocika-samsara/main/install.sh | bash
 ```
 
-二进制安装到 `~/.local/bin/samsara`，无需 Rust 工具链。
+安装到 `~/.local/bin/samsara`，无需 Rust 环境，git 需在 PATH 中。
 
 ```bash
 # 指定版本
-SAMSARA_VERSION=v0.1.0 bash <(curl -fsSL .../install.sh)
+SAMSARA_VERSION=v0.1.0 bash <(curl -fsSL https://raw.githubusercontent.com/mocikadev/mocika-samsara/main/install.sh)
 
 # 自定义安装目录
-SAMSARA_INSTALL_DIR=/usr/local/bin bash <(curl -fsSL .../install.sh)
+SAMSARA_INSTALL_DIR=/usr/local/bin bash <(curl -fsSL https://raw.githubusercontent.com/mocikadev/mocika-samsara/main/install.sh)
 ```
-
-**方式 2：从源码编译**
-
-```bash
-cargo install --path .   # 需要 Rust 1.88+
-```
-
-**系统要求**：git 已安装并在 PATH 中。
 
 ---
 
-## 快速开始
+## 初始化
 
 ```bash
-# 1. 初始化知识库（创建 ~/.agents/ 目录结构）
 samsara init
+```
 
-# 2. 写入一条教训
+创建 `~/.agents/` 目录结构，自动安装 `self-evolution` skill（需已安装 skm），并将自进化协议注入到已检测到的 AI 工具配置中。
+
+---
+
+## 工作流
+
+### 记录教训
+
+```bash
+# 遇到错误，写下来
 samsara write rust cargo-fmt --summary "提交前顺序：cargo fmt → clippy → test" --type error
 
-# 3. 再次遇到同一问题，occurrences +1（不覆盖正文）
+# 再次踩坑，occurrences +1（不覆盖正文）
 samsara write rust cargo-fmt
 
-# 4. 验证规则有效（verified +1，影响推荐分）
+# 验证规则有效，verified +1
 samsara write rust cargo-fmt --verify
+```
 
-# 5. 搜索知识库
-samsara search cargo                          # 全库搜索
-samsara search rebase --domain git            # 限定 domain
-samsara search fmt --type error               # 限定 lesson 类型
-samsara search fmt --lessons-only             # 只搜 lessons
-samsara search fmt --rules-only               # 只搜 rules
+### 晋升为规则
 
-# 6. 查看知识库状态
-samsara status
-
-# 7. 查看操作日志
-samsara log                   # 最近 20 条
-samsara log --tail 5          # 最近 5 条
-samsara log --action write    # 只看 WRITE 操作
-
-# ── 以下命令在 v0.2 实装 ──────────────────────────
-
-# 晋升为规则（occurrences ≥ 3 后）
+```bash
+# occurrences ≥ 3 后，晋升到 rules/rust.md
 samsara promote rust cargo-fmt
 
-# 晋升到 AGENTS.md（100 行安全检查）
+# 晋升到 AGENTS.md（AI 每次启动都会读到）
 samsara promote rust cargo-fmt --layer0
+```
 
-# 检查知识库健康度
-samsara lint [--fix]
+### 搜索
 
-# 分析学习模式
-samsara reflect
+```bash
+samsara search "cargo fmt"
+samsara search rebase --domain git
+samsara search fmt --type error
+```
 
-# ── 以下命令在 v0.3 实装 ──────────────────────────
+### 日常维护
 
-# 查看 Top N 推荐晋升规则
-samsara prime
-samsara prime --limit 5 --domain rust
+```bash
+samsara status                  # 知识库统计
+samsara lint [--fix]            # 检查知识库健康度
+samsara reflect                 # 分析学习模式
+samsara prime                   # Top 10 推荐晋升的规则
+samsara archive rust old-topic  # 归档不活跃教训
+```
 
-# 归档不再活跃的教训
-samsara archive rust old-pattern
+### 多设备同步
 
-# 从 AGENTS.md 降级规则
-samsara demote cargo-fmt --yes
-
-# 归档旧日志（保留最近 90 天）
-samsara log --rotate --keep 90
+```bash
+samsara remote add https://github.com/yourname/knowledge.git
+samsara push
+samsara pull
 ```
 
 ---
 
-## 命令列表
+## AI 工具集成
 
-### ✅ v0.1 已实装
+### 第一步：配置 MCP
 
-| 命令 | 说明 |
-|------|------|
-| `samsara init [--yes]` | 初始化知识库目录和工具映射 |
-| `samsara write <domain> <keyword>` | 写入或更新教训（upsert 语义） |
-| `samsara search <query>` | 按相关性搜索 lessons/rules |
-| `samsara status` | 知识库统计摘要 |
-| `samsara log [--tail N] [--action <type>]` | 查看操作日志 |
-
-### ✅ v0.2 已实装
-
-| 命令 | 说明 |
-|------|------|
-| `samsara promote <domain> <keyword> [--layer0]` | 晋升为规则 / 晋升到 AGENTS.md |
-| `samsara lint [--fix]` | 检查知识库健康度（13 项） |
-| `samsara reflect` | 静态分析学习模式 |
-| `samsara skill-note <name> [--fail --note "..."]` | 记录 skill 使用结果 |
-| `samsara domain list\|add` | 管理 domain |
-
-### ✅ v0.3 已实装
-
-| 命令 | 说明 |
-|------|------|
-| `samsara prime [--limit N] [--domain d] [--sort recent\|score]` | Top N 推荐晋升规则 |
-| `samsara archive <domain> <keyword>` | 归档教训到 archive/ 目录 |
-| `samsara demote <pattern> [--yes]` | 从 AGENTS.md 降级规则 |
-| `samsara log --rotate [--keep N]` | 归档 N 天前的日志条目 |
-
-### ✅ v0.4 已实装
-
-| 命令 | 说明 |
-|------|------|
-| `samsara remote add\|set\|show` | 管理 git 远端地址 |
-| `samsara push` | 推送 knowledge/ 到远端 git |
-| `samsara pull` | 从远端 git 拉取并重建 INDEX |
-| `samsara self-update [--check]` | 升级 samsara 到最新版本 |
-| `samsara mcp serve` | 启动 MCP 服务（stdio 模式）|
-
----
-
-## MCP 集成（✅ v0.4 已实装）
-
-AI 工具可通过 MCP 协议直接调用 samsara，替代部分 `bash("samsara ...")` 调用。
-
-### 配置方式（一次性手动配置）
+AI 工具通过 MCP 协议直接调用 samsara，无需手动执行命令。配置一次后自动生效。
 
 **OpenCode** — 编辑 `~/.config/opencode/opencode.json`：
+
 ```json
 {
   "$schema": "https://opencode.ai/config.json",
@@ -161,6 +110,7 @@ AI 工具可通过 MCP 协议直接调用 samsara，替代部分 `bash("samsara 
 ```
 
 **Claude Code** — 编辑 `~/.claude/claude_desktop_config.json`：
+
 ```json
 {
   "mcpServers": {
@@ -172,37 +122,63 @@ AI 工具可通过 MCP 协议直接调用 samsara，替代部分 `bash("samsara 
 }
 ```
 
-> ⚠️ **注意**：OpenCode 与 Claude Code 的 MCP 配置格式**不同**。
-> OpenCode 使用 `mcp.{name}.type + command`（数组）；Claude Code 使用 `mcpServers.{name}.command + args`。
-> 混用格式会导致 MCP 无法启动。
+> ⚠️ OpenCode 与 Claude Code 的配置格式不同，不可混用。
 
-配置后重启工具，AI 即可直接调用 MCP 工具。samsara 进程由工具按需自动启动（stdio 模式），**无需手动启动**。
+配置后重启工具即可，samsara 进程由工具按需启动，无需手动运行。
 
-### 暴露的 MCP 工具
+### 第二步：安装 self-evolution skill
 
-| Tool | 等价 CLI | 说明 |
-|------|----------|------|
-| `write_lesson` | `samsara write` | 写入/更新 lesson |
-| `search_knowledge` | `samsara search` | 检索知识库 |
-| `get_status` | `samsara status` | 知识库统计 |
-| `promote_lesson` | `samsara promote` | 晋升 lesson |
-| `read_index` | —— | 获取 INDEX.md 完整内容 |
-| `prime_context` | `samsara prime` | 生成紧凑上下文摘要 |
+```bash
+skm install mocikadev/mocika-samsara:skills/self-evolution --link-to all
+```
 
-> v0.3 之前，所有操作均通过 `bash("samsara ...")` 调用 CLI，效果完全等同。
+或通过 `samsara init` 自动安装（需已安装 skm）。
+
+后续升级：
+
+```bash
+skm update self-evolution
+```
+
+### AI 的调用方式
+
+配置完成后，AI 通过 MCP 工具操作知识库：
+
+| MCP 工具 | 触发场景 |
+|----------|----------|
+| `write_lesson` | 遇到错误或学到新知识时主动记录 |
+| `search_knowledge` | 解决问题前先查已有经验 |
+| `promote_lesson` | 某条教训反复出现，建议晋升 |
+| `prime_context` | 任务开始时加载最相关的经验摘要 |
+| `read_index` | 了解知识库全貌 |
+| `get_status` | 查看知识库健康状态 |
+
+skill 加载后，AI 会在合适的时机自动调用这些工具——无需用户提示。
 
 ---
 
-## 开发状态
+## 命令速查
 
-| 里程碑 | 状态 | 说明 |
-|--------|------|------|
-| v0.1 | ✅ 已完成（2026-04-23） | `init` / `write` / `search` / `status` / `log` |
-| v0.2 | ✅ 已完成（2026-04-23） | `promote` / `lint` / `reflect` / `skill-note` / `domain` |
-| v0.3 | ✅ 已完成（2026-04-24） | `prime` / `archive` / `demote` / `log --rotate` |
-| v0.4 | ✅ 已完成（2026-04-24） | `push` / `pull` / `self-update` / `mcp serve` / `remote` |
-
-详见 `docs/process.md` 和 `docs/samsara-engineering.md`。
+| 命令 | 说明 |
+|------|------|
+| `samsara init [--yes]` | 初始化知识库 |
+| `samsara write <domain> <keyword> [--summary "..."] [--type error\|skill\|pattern\|insight] [--verify]` | 写入 / 更新教训 |
+| `samsara search <query> [--domain d] [--type t]` | 搜索知识库 |
+| `samsara promote <domain> <keyword> [--layer0]` | 晋升为规则 / 写入 AGENTS.md |
+| `samsara lint [--fix]` | 检查知识库健康度 |
+| `samsara reflect` | 分析学习模式 |
+| `samsara prime [--limit N] [--domain d]` | 推荐晋升候选 |
+| `samsara archive <domain> <keyword>` | 归档教训 |
+| `samsara demote <pattern> [--yes]` | 从 AGENTS.md 降级规则 |
+| `samsara status` | 知识库统计 |
+| `samsara log [--tail N] [--action t] [--rotate]` | 操作日志 |
+| `samsara skill-note <name> [--fail] [--note "..."]` | 记录 skill 使用结果 |
+| `samsara domain list\|add` | 管理 domain |
+| `samsara remote add\|set\|show` | 管理同步远端 |
+| `samsara push [--dry-run]` | 推送到远端 |
+| `samsara pull` | 从远端拉取 |
+| `samsara self-update [--check]` | 升级到最新版本 |
+| `samsara mcp serve` | 启动 MCP 服务（由 AI 工具自动调用）|
 
 ---
 

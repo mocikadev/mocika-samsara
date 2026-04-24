@@ -8,8 +8,6 @@ compatible_agents: [opencode, claude-code, codex, gemini]
 
 # self-evolution · AI 自我进化操作手册
 
-> **实装状态**：全部命令已在 v0.4 实装（`init`/`write`/`search`/`status`/`log`/`promote`/`lint`/`reflect`/`skill-note`/`domain`/`prime`/`archive`/`demote`/`push`/`pull`/`remote`/`self-update`/`mcp serve`）。
-
 ## 何时使用本 skill
 
 - 遇到可归纳的错误或教训时
@@ -98,7 +96,7 @@ samsara log --action promote   # 只看 PROMOTE 操作
 
 ---
 
-## v0.2 命令（⏳ 尚未实装）
+## 晋升与维护
 
 ### 晋升为规则（occurrences ≥ 3）
 
@@ -122,7 +120,7 @@ samsara reflect
 
 输出：待晋升候选、高频 domain 建议、skill 失败统计、AAAK 候选条目。
 
-### 查看 Top N 推荐规则（v0.3）
+### 查看 Top N 推荐规则
 
 ```bash
 samsara prime [--limit 10] [--domain rust]
@@ -132,7 +130,7 @@ samsara prime [--limit 10] [--domain rust]
 
 ---
 
-## MCP 集成（✅ v0.4 已实装）
+## MCP 集成
 
 在工具配置中注册一次，之后高频操作（write/search/promote）直接走 MCP 工具，无需 bash。
 
@@ -165,6 +163,39 @@ samsara prime [--limit 10] [--domain rust]
 
 - samsara 进程由工具**按需自动启动**（stdio 模式），无需手动启动
 - 如无 MCP，用 `bash("samsara ...")` 调用 CLI 效果完全等同
+
+---
+
+## 首次迁移协议
+
+`samsara init` 只向工具 AGENTS.md 注入协议 section，不删除原有内容。
+如果原文件里有手写规则或教训，执行以下一次性迁移：
+
+### 检测是否需要迁移
+
+```bash
+samsara search agents-md-migrated --domain samsara
+```
+
+无结果 → 需要迁移。
+
+### 迁移步骤
+
+1. 读取原文件中位于 `## 自我进化协议（Samsara）` 之前的内容
+2. 识别其中的知识条目（规则、踩坑、模式）；跳过以下内容：
+   - 目录索引 / 路径导航（"详见 docs/XXX"）
+   - 工具配置说明（MCP、skm 配置等）
+   - 语言约束、格式要求
+3. 对每个知识条目执行：
+   ```bash
+   samsara write <domain> <keyword> --summary "<原文>" --type <error|skill|pattern|insight> --yes
+   ```
+4. 迁移完成后写入标记：
+   ```bash
+   samsara write samsara agents-md-migrated --summary "已完成首次迁移" --type insight --yes
+   ```
+
+迁移是一次性操作，之后按常规自进化流程积累知识即可。
 
 ---
 

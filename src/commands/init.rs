@@ -75,6 +75,33 @@ occurrences ≥ 3 时：`samsara promote <domain> <keyword>`（晋升到 rules/<
 <!-- AAAK 条目（entity|relation|value|date），由 samsara 自动维护，请勿手动编辑 -->
 "#;
 
+const PROTOCOL_INJECT: &str = r#"
+
+---
+
+## 自我进化协议（Samsara）
+
+> 知识库路径：`~/.agents/knowledge/`
+
+遇到可归纳的错误/教训时：
+
+```bash
+samsara write <domain> <keyword> --summary "..." [--type error|skill|pattern|insight]
+```
+
+再次遇到同一问题：`samsara write <domain> <keyword>`（occurrences +1）
+occurrences ≥ 3：`samsara promote <domain> <keyword>`
+
+| 命令 | 用途 |
+|------|------|
+| `samsara write <d> <k> --summary "..."` | 写入 / 更新教训 |
+| `samsara write <d> <k> --verify` | 验证规则有效 |
+| `samsara promote <d> <k>` | 晋升到 rules/<domain>.md |
+| `samsara promote <d> <k> --layer0` | 晋升到 AGENTS.md |
+| `samsara search <query>` | 搜索教训 / 规则 |
+| `samsara prime` | Top 10 推荐晋升规则 |
+"#;
+
 const GITIGNORE_LINES: &[&str] = &[".DS_Store", "*.tmp", "*.bak"];
 
 const GITATTRIBUTES_LINES: &[&str] = &[
@@ -198,36 +225,39 @@ fn upsert_file_lines(path: &Path, lines: &[&str], dry_run: bool) -> Result<(), S
 }
 
 fn setup_tool_mappings(agents_home: &Path, dry_run: bool) -> Result<(), SamsaraError> {
-    let agents_md = agents_home.join("AGENTS.md");
+    let home = dirs::home_dir().unwrap_or_default();
 
-    let opencode_dir = dirs::home_dir()
-        .unwrap_or_default()
-        .join(".config")
-        .join("opencode");
+    let opencode_dir = home.join(".config").join("opencode");
     if opencode_dir.exists() {
-        let link = opencode_dir.join("AGENTS.md");
-        make_symlink(&agents_md, &link, dry_run);
+        inject_protocol(&opencode_dir.join("AGENTS.md"), dry_run)?;
     }
 
-    let codex_dir = dirs::home_dir().unwrap_or_default().join(".codex");
+    let codex_dir = home.join(".codex");
     if codex_dir.exists() {
-        let link = codex_dir.join("AGENTS.md");
-        make_symlink(&agents_md, &link, dry_run);
+        inject_protocol(&codex_dir.join("AGENTS.md"), dry_run)?;
     }
 
-    let claude_dir = dirs::home_dir().unwrap_or_default().join(".claude");
+    let claude_dir = home.join(".claude");
     if claude_dir.exists() {
         let claude_md = claude_dir.join("CLAUDE.md");
+        let agents_md = agents_home.join("AGENTS.md");
+        let import_line = format!("@{}", agents_md.display());
         if !claude_md.exists() {
             if !dry_run {
-                std::fs::write(&claude_md, format!("@{}\n", agents_md.display()))?;
+                std::fs::write(&claude_md, format!("{import_line}\n"))?;
             }
             println!("  ✅ ~/.claude/CLAUDE.md：写入 @import 行");
         } else {
-            println!(
-                "  ⚠️  ~/.claude/CLAUDE.md 已存在，请手动添加：@{}",
-                agents_md.display()
-            );
+            let content = std::fs::read_to_string(&claude_md)?;
+            if !content.contains(&import_line) {
+                if !dry_run {
+                    let appended = format!("{}\n{import_line}\n", content.trim_end());
+                    std::fs::write(&claude_md, appended)?;
+                }
+                println!("  ✅ ~/.claude/CLAUDE.md：追加 @import 行");
+            } else {
+                println!("  ⚠️  ~/.claude/CLAUDE.md 已包含 @import，跳过");
+            }
         }
     }
 
@@ -235,21 +265,26 @@ fn setup_tool_mappings(agents_home: &Path, dry_run: bool) -> Result<(), SamsaraE
     Ok(())
 }
 
-fn make_symlink(target: &Path, link: &Path, dry_run: bool) {
-    if link.exists() || link.is_symlink() {
-        println!("  ⚠️  已存在，跳过：{}", link.display());
-        return;
-    }
-    if !dry_run {
-        #[cfg(unix)]
-        {
-            if let Err(e) = std::os::unix::fs::symlink(target, link) {
-                println!("  ❌ symlink 失败 {}: {e}", link.display());
-                return;
-            }
+fn inject_protocol(path: &Path, dry_run: bool) -> Result<(), SamsaraError> {
+    const MARKER: &str = "## 自我进化协议（Samsara）";
+    if path.exists() {
+        let content = std::fs::read_to_string(path)?;
+        if content.contains(MARKER) {
+            println!("  ⚠️  自进化协议已存在，跳过：{}", path.display());
+            return Ok(());
         }
+        if !dry_run {
+            let appended = format!("{}\n{}", content.trim_end(), PROTOCOL_INJECT);
+            std::fs::write(path, appended)?;
+        }
+        println!("  ✅ 注入自进化协议：{}", path.display());
+    } else {
+        if !dry_run {
+            std::fs::write(path, PROTOCOL_INJECT.trim_start())?;
+        }
+        println!("  ✅ 创建并写入自进化协议：{}", path.display());
     }
-    println!("  ✅ symlink：{} → {}", link.display(), target.display());
+    Ok(())
 }
 
 fn maybe_install_skill(_yes: bool) -> Result<(), SamsaraError> {
