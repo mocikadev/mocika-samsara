@@ -51,6 +51,10 @@ jobs:
             runner: macos-latest
             use-cross: false
             artifact: macos-arm64
+          - target: x86_64-pc-windows-msvc
+            runner: windows-latest
+            use-cross: false
+            artifact: windows-x86_64
 
     runs-on: ${{ matrix.runner }}
     steps:
@@ -70,7 +74,8 @@ jobs:
         with:
           tool: cross
 
-      - name: Build
+      - name: Build (Unix)
+        if: runner.os != 'Windows'
         run: |
           if [ "${{ matrix.use-cross }}" = "true" ]; then
             cross build --release --target ${{ matrix.target }}
@@ -78,13 +83,22 @@ jobs:
             cargo build --release --target ${{ matrix.target }}
           fi
 
-      - name: Stage artifact
+      - name: Build (Windows)
+        if: runner.os == 'Windows'
+        run: cargo build --release --target ${{ matrix.target }}
+
+      - name: Stage artifact (Unix)
+        if: runner.os != 'Windows'
         run: cp target/${{ matrix.target }}/release/samsara samsara-${{ matrix.artifact }}
+
+      - name: Stage artifact (Windows)
+        if: runner.os == 'Windows'
+        run: copy target\${{ matrix.target }}\release\samsara.exe samsara-${{ matrix.artifact }}.exe
 
       - uses: actions/upload-artifact@v4
         with:
           name: samsara-${{ matrix.artifact }}
-          path: samsara-${{ matrix.artifact }}
+          path: samsara-${{ matrix.artifact }}*
 
   release:
     name: Create GitHub Release

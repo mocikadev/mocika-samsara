@@ -31,11 +31,6 @@ struct SemVersion {
 }
 
 pub fn run(args: SelfUpdateArgs, _config: &Config) -> Result<(), SamsaraError> {
-    if cfg!(target_os = "windows") {
-        println!("⚠️  Windows 暂不支持自动升级，请手动下载");
-        return Ok(());
-    }
-
     let client = Client::builder()
         .user_agent(format!("samsara/{}", env!("CARGO_PKG_VERSION")))
         .timeout(Duration::from_secs(15))
@@ -167,6 +162,7 @@ fn asset_name_for_current_target() -> Result<&'static str, SamsaraError> {
         ("aarch64", "linux") => Ok("samsara-linux-arm64"),
         ("x86_64", "macos") => Ok("samsara-macos-amd64"),
         ("aarch64", "macos") => Ok("samsara-macos-arm64"),
+        ("x86_64", "windows") => Ok("samsara-windows-x86_64.exe"),
         (arch, os) => Err(SamsaraError::UpdateError(format!(
             "暂不支持自动升级的目标平台：{arch}-{os}"
         ))),
@@ -214,10 +210,23 @@ fn prepare_temp_dir(exe_path: &Path) -> Result<PathBuf, SamsaraError> {
 }
 
 fn replace_current_exe(new_binary: &Path, exe_path: &Path) -> Result<(), SamsaraError> {
-    let temp_target = exe_path.with_extension("tmp");
-    fs::copy(new_binary, &temp_target)?;
-    let permissions = fs::metadata(new_binary)?.permissions();
-    fs::set_permissions(&temp_target, permissions)?;
-    fs::rename(&temp_target, exe_path)?;
-    Ok(())
+    #[cfg(target_os = "windows")]
+    {
+        let backup = exe_path.with_extension("exe.bak");
+        let _ = fs::remove_file(&backup);
+        fs::rename(exe_path, &backup)?;
+        fs::copy(new_binary, exe_path)?;
+        let _ = fs::remove_file(&backup);
+        return Ok(());
+    }
+
+    #[cfg(not(target_os = "windows"))]
+    {
+        let temp_target = exe_path.with_extension("tmp");
+        fs::copy(new_binary, &temp_target)?;
+        let permissions = fs::metadata(new_binary)?.permissions();
+        fs::set_permissions(&temp_target, permissions)?;
+        fs::rename(&temp_target, exe_path)?;
+        Ok(())
+    }
 }

@@ -30,11 +30,19 @@ curl -fsSL https://raw.githubusercontent.com/mocikadev/mocika-skills-cli/main/in
 
 ### 2. Install samsara
 
+**Linux / macOS**
+
 ```bash
 curl -fsSL https://raw.githubusercontent.com/mocikadev/mocika-samsara/main/install.sh | bash
 ```
 
-Installs to `~/.local/bin/samsara`. No Rust toolchain required; git must be in PATH. The install script automatically checks whether skm is present.
+**Windows** (PowerShell)
+
+```powershell
+irm https://raw.githubusercontent.com/mocikadev/mocika-samsara/main/install.ps1 | iex
+```
+
+Installs to `~/.local/bin/samsara` (Windows: `~\.local\bin\samsara.exe`). No Rust toolchain required; git must be in PATH. The install script automatically checks whether skm is present.
 
 ### 3. Initialize the knowledge base
 
@@ -196,7 +204,7 @@ Works alongside [`skm`](https://github.com/mocikadev/mocika-skills-cli) as the c
 | Linux | aarch64 (musl) | ✅ |
 | macOS | x86_64 | ✅ |
 | macOS | Apple Silicon | ✅ |
-| Windows | — | Planned |
+| Windows | x86_64 | ✅ |
 
 ## Build from Source
 

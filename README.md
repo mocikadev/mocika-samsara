@@ -30,11 +30,19 @@ curl -fsSL https://raw.githubusercontent.com/mocikadev/mocika-skills-cli/main/in
 
 ### 2. 安装 samsara
 
+**Linux / macOS**
+
 ```bash
 curl -fsSL https://raw.githubusercontent.com/mocikadev/mocika-samsara/main/install.sh | bash
 ```
 
-安装到 `~/.local/bin/samsara`，无需 Rust 环境，git 需在 PATH 中。安装脚本会自动检测 skm 是否已安装。
+**Windows**（PowerShell）
+
+```powershell
+irm https://raw.githubusercontent.com/mocikadev/mocika-samsara/main/install.ps1 | iex
+```
+
+安装到 `~/.local/bin/samsara`（Windows 为 `~\.local\bin\samsara.exe`），无需 Rust 环境，git 需在 PATH 中。安装脚本会自动检测 skm 是否已安装。
 
 ### 3. 初始化知识库
 
@@ -196,7 +204,7 @@ samsara write git commit   --summary "commit 格式：type: 中文描述" --type
 | Linux | aarch64 (musl) | ✅ |
 | macOS | x86_64 | ✅ |
 | macOS | Apple Silicon | ✅ |
-| Windows | — | 计划中 |
+| Windows | x86_64 | ✅ |
 
 ## 从源码构建
 
