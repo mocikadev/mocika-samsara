@@ -41,6 +41,8 @@ case "${LANG:-}" in
     MSG_DOWNLOAD_FAIL="下载失败，请检查网络或版本号是否正确。"
     MSG_INSTALLED="已安装："
     MSG_PATH_WARN="%s 不在 \$PATH 中，请将以下内容加入 ~/.bashrc 或 ~/.zshrc："
+    MSG_PATH_ADDED="%s 已自动写入 %s，重新打开终端后生效。"
+    MSG_PATH_FALLBACK="%s 不在 \$PATH 中，请手动将以下内容加入 shell 配置文件："
     MSG_DONE="完成！"
     MSG_HINT="运行 %ssamsara --help%s 开始使用。"
     MSG_UNSUPPORTED_ARCH="不支持的架构：%s（%s）"
@@ -49,6 +51,9 @@ case "${LANG:-}" in
     MSG_SKM_INSTALLING="未检测到 skm，正在自动安装..."
     MSG_SKM_INSTALL_OK="skm 安装完成。"
     MSG_SKM_INSTALL_FAIL="skm 自动安装失败，请手动安装：https://github.com/mocikadev/mocika-skills-cli"
+    MSG_INIT_RUNNING="初始化知识库..."
+    MSG_INIT_OK="知识库初始化完成"
+    MSG_INIT_FAIL="初始化失败，请稍后手动运行：samsara init"
     ;;
   *)
     MSG_TITLE="Installing samsara — AI Agent knowledge management CLI"
@@ -66,6 +71,8 @@ case "${LANG:-}" in
     MSG_DOWNLOAD_FAIL="Download failed. Check your network or the version string."
     MSG_INSTALLED="Installed:"
     MSG_PATH_WARN="%s is not in \$PATH. Add the following to ~/.bashrc or ~/.zshrc:"
+    MSG_PATH_ADDED="%s added to PATH in %s. Restart your terminal or run: source %s"
+    MSG_PATH_FALLBACK="%s is not in \$PATH. Add this line to your shell config manually:"
     MSG_DONE="Done!"
     MSG_HINT="Run %ssamsara --help%s to get started."
     MSG_UNSUPPORTED_ARCH="Unsupported architecture: %s (%s)"
@@ -74,6 +81,9 @@ case "${LANG:-}" in
     MSG_SKM_INSTALLING="skm not found, installing automatically..."
     MSG_SKM_INSTALL_OK="skm installed successfully."
     MSG_SKM_INSTALL_FAIL="skm auto-install failed. Install manually: https://github.com/mocikadev/mocika-skills-cli"
+    MSG_INIT_RUNNING="Initializing knowledge base..."
+    MSG_INIT_OK="Knowledge base initialized"
+    MSG_INIT_FAIL="Init failed. Run manually: samsara init"
     ;;
 esac
 
@@ -201,6 +211,16 @@ install_skm_if_needed() {
   rm -f "$tmp_script"
 }
 
+init_knowledge_base() {
+  printf "\n"
+  info "$MSG_INIT_RUNNING"
+  if "$INSTALL_DIR/$BINARY" init; then
+    ok "$MSG_INIT_OK"
+  else
+    warn "$MSG_INIT_FAIL"
+  fi
+}
+
 main() {
   printf "\n${BOLD}%s${RESET}\n\n" "$MSG_TITLE"
 
@@ -233,12 +253,34 @@ main() {
   fi
 
   if ! echo ":${PATH}:" | grep -qF ":${INSTALL_DIR}:"; then
-    printf "\n"
-    warn "$(printf "$MSG_PATH_WARN" "$INSTALL_DIR")"
-    printf "\n  ${BOLD}export PATH=\"\$HOME/.local/bin:\$PATH\"${RESET}\n"
+    local export_line="export PATH=\"${INSTALL_DIR}:\$PATH\""
+    local rc_file
+    case "${SHELL:-}" in
+      */zsh)  rc_file="$HOME/.zshrc" ;;
+      */fish) rc_file="" ;;
+      */bash)
+        if [ "$(uname -s)" = "Darwin" ] && [ -f "$HOME/.bash_profile" ]; then
+          rc_file="$HOME/.bash_profile"
+        else
+          rc_file="$HOME/.bashrc"
+        fi
+        ;;
+      *) rc_file="$HOME/.profile" ;;
+    esac
+
+    if [ -n "$rc_file" ] && ! grep -qF "$INSTALL_DIR" "$rc_file" 2>/dev/null; then
+      printf "\n%s\n" "$export_line" >> "$rc_file"
+      printf "\n"
+      ok "$(printf "$MSG_PATH_ADDED" "$INSTALL_DIR" "$rc_file" "$rc_file")"
+    elif [ -z "$rc_file" ]; then
+      printf "\n"
+      warn "$(printf "$MSG_PATH_FALLBACK" "$INSTALL_DIR")"
+      printf "\n  ${BOLD}%s${RESET}\n" "$export_line"
+    fi
   fi
 
   install_skm_if_needed
+  init_knowledge_base
 
   printf "\n${GREEN}${BOLD}%s${RESET} $(printf "$MSG_HINT" "${BOLD}" "${RESET}")\n\n" "$MSG_DONE"
 }

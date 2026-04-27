@@ -42,17 +42,9 @@ curl -fsSL https://raw.githubusercontent.com/mocikadev/mocika-samsara/main/insta
 irm https://raw.githubusercontent.com/mocikadev/mocika-samsara/main/install.ps1 | iex
 ```
 
-安装到 `~/.local/bin/samsara`（Windows 为 `~\.local\bin\samsara.exe`），无需 Rust 环境，git 需在 PATH 中。安装脚本会自动检测 skm 是否已安装。
+Installs to `~/.local/bin/samsara`（Windows 为 `~\.local\bin\samsara.exe`），无需 Rust 环境，git 需在 PATH 中。安装脚本会自动检测 skm 是否已安装，并自动执行 `samsara init` 初始化知识库。
 
-### 3. 初始化知识库
-
-```bash
-samsara init
-```
-
-初始化会创建 `~/.agents/knowledge/` 并在 `~/.agents/AGENTS.md` 中注入自我进化协议，同时自动安装配套的 `self-evolution` skill。
-
-### 4. 配置 MCP（让 AI 接管）
+### 3. 配置 MCP（让 AI 接管）
 
 **OpenCode** — 编辑 `~/.config/opencode/opencode.json`：
 
