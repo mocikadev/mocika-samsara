@@ -20,15 +20,7 @@
 
 ## 快速开始
 
-### 1. 安装 skm
-
-[`skm`](https://github.com/mocikadev/mocika-skills-cli) 是 samsara 的技能包管理器，负责安装和管理 AI Agent skill，需要先安装：
-
-```bash
-curl -fsSL https://raw.githubusercontent.com/mocikadev/mocika-skills-cli/main/install.sh | bash
-```
-
-### 2. 安装 samsara
+### 1. 安装 samsara
 
 **Linux / macOS**
 
@@ -42,56 +34,27 @@ curl -fsSL https://raw.githubusercontent.com/mocikadev/mocika-samsara/main/insta
 irm https://raw.githubusercontent.com/mocikadev/mocika-samsara/main/install.ps1 | iex
 ```
 
-Installs to `~/.local/bin/samsara`（Windows 为 `~\.local\bin\samsara.exe`），无需 Rust 环境，git 需在 PATH 中。安装脚本会自动检测 skm 是否已安装，并自动执行 `samsara init` 初始化知识库。
+安装脚本会自动完成以下所有步骤：
+- 安装 [`skm`](https://github.com/mocikadev/mocika-skills-cli)（如未安装）
+- 初始化知识库（`~/.agents/knowledge/`）
+- 安装 `self-evolution` skill
+- 为已检测到的 AI 工具注入 MCP 配置
 
-### 3. 配置 MCP（让 AI 接管）
+### 2. 重启 AI 工具
 
-**OpenCode** — 编辑 `~/.config/opencode/opencode.json`：
-
-```json
-{
-  "$schema": "https://opencode.ai/config.json",
-  "mcp": {
-    "samsara": {
-      "type": "local",
-      "command": ["samsara", "mcp", "serve"]
-    }
-  }
-}
-```
-
-**Claude Code** — 编辑 `~/.claude/claude_desktop_config.json`：
-
-```json
-{
-  "mcpServers": {
-    "samsara": {
-      "command": "samsara",
-      "args": ["mcp", "serve"]
-    }
-  }
-}
-```
-
-配置完成后重启 AI 工具，samsara 进程由工具按需自动启动，无需手动运行。
+MCP 配置写入后，重启你的 AI 工具（OpenCode / Claude Code 等）即可，samsara 进程由工具按需自动启动。
 
 ---
 
-## 安装 self-evolution skill
+## self-evolution skill
 
-`self-evolution` 是配套的 AI Agent 技能包，让 AI 助手知道**何时**以及**如何**调用 samsara，无需你手动提示：
-
-```bash
-skm install mocikadev/mocika-samsara:skills/self-evolution --link-to all
-```
-
-> 如果 `samsara init` 时已安装 skm，skill 会自动安装，无需手动执行。
-
-安装后，AI 会自动：
+安装完成后，`self-evolution` skill 已自动安装并链接到所有 AI 工具。它让 AI 助手知道**何时**以及**如何**调用 samsara，无需你手动提示：
 
 - 遇到错误或踩坑 → 调用 `samsara_write_lesson` 记录教训
 - 开始任务前 → 调用 `samsara_search_knowledge` 检索已有经验
 - 发现高频错误 → 主动建议 `samsara_promote_lesson`
+
+> 后续升级：`skm update self-evolution`
 
 ## 首次激活示例
 

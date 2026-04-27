@@ -1,6 +1,7 @@
 use crate::{cli::InitArgs, config::Config, error::SamsaraError};
 use std::path::Path;
 use std::process::Command;
+use serde_json::Value;
 
 const SEED_DOMAINS: &[&str] = &[
     "rust",
@@ -262,6 +263,7 @@ fn setup_tool_mappings(agents_home: &Path, dry_run: bool) -> Result<(), SamsaraE
     }
 
     println!("  ⏭️  Gemini / Windsurf 映射：待 P-03 确认后实现");
+    inject_mcp_configs(dry_run)?;
     Ok(())
 }
 
@@ -311,5 +313,97 @@ fn maybe_install_skill(_yes: bool) -> Result<(), SamsaraError> {
         println!("  ⚠️  未检测到 skm，跳过 skill 安装");
         println!("     安装 skm 后手动执行：skm install mocikadev/mocika-samsara:skills/self-evolution --link-to all");
     }
+    Ok(())
+}
+
+fn inject_mcp_configs(dry_run: bool) -> Result<(), SamsaraError> {
+    let home = dirs::home_dir().unwrap_or_default();
+
+    let opencode_dir = home.join(".config").join("opencode");
+    if opencode_dir.exists() {
+        let entry = serde_json::json!({
+            "type": "local",
+            "command": ["samsara", "mcp", "serve"]
+        });
+        inject_json_mcp_entry(&opencode_dir.join("opencode.json"), "mcp", entry, dry_run)?;
+    }
+
+    let claude_dir = home.join(".claude");
+    if claude_dir.exists() {
+        let entry = serde_json::json!({
+            "command": "samsara",
+            "args": ["mcp", "serve"]
+        });
+        inject_json_mcp_entry(
+            &claude_dir.join("claude_desktop_config.json"),
+            "mcpServers",
+            entry,
+            dry_run,
+        )?;
+    }
+
+    Ok(())
+}
+
+fn inject_json_mcp_entry(
+    path: &Path,
+    section_key: &str,
+    entry: Value,
+    dry_run: bool,
+) -> Result<(), SamsaraError> {
+    let mut root: Value = if path.exists() {
+        let content = std::fs::read_to_string(path)?;
+        match serde_json::from_str(&content) {
+            Ok(v) => v,
+            Err(_) => {
+                println!("  ⚠️  {} JSON 解析失败，跳过 MCP 配置注入", path.display());
+                return Ok(());
+            }
+        }
+    } else {
+        Value::Object(serde_json::Map::new())
+    };
+
+    let root_obj = match root.as_object_mut() {
+        Some(obj) => obj,
+        None => {
+            println!("  ⚠️  {} 格式非对象，跳过 MCP 配置注入", path.display());
+            return Ok(());
+        }
+    };
+
+    let section = root_obj
+        .entry(section_key)
+        .or_insert_with(|| Value::Object(serde_json::Map::new()));
+
+    let section_obj = match section.as_object_mut() {
+        Some(obj) => obj,
+        None => {
+            println!(
+                "  ⚠️  {} 中 {} 格式非对象，跳过",
+                path.display(),
+                section_key
+            );
+            return Ok(());
+        }
+    };
+
+    if section_obj.contains_key("samsara") {
+        println!("  ⚠️  {} 已含 samsara MCP 配置，跳过", path.display());
+        return Ok(());
+    }
+
+    section_obj.insert("samsara".to_string(), entry);
+
+    if !dry_run {
+        if let Some(parent) = path.parent() {
+            std::fs::create_dir_all(parent)?;
+        }
+        let rendered = serde_json::to_string_pretty(&root)
+            .map_err(|e| std::io::Error::other(e.to_string()))?;
+        std::fs::write(path, rendered + "\n")?;
+    }
+
+    println!("  ✅ MCP 配置已注入：{}", path.display());
     Ok(())
 }

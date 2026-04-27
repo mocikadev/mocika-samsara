@@ -20,15 +20,7 @@ Most AI tools just "follow instructions". **samsara** solves a different problem
 
 ## Quick Start
 
-### 1. Install skm
-
-[`skm`](https://github.com/mocikadev/mocika-skills-cli) is samsara's skill package manager — it handles installing and managing AI Agent skills and must be installed first:
-
-```bash
-curl -fsSL https://raw.githubusercontent.com/mocikadev/mocika-skills-cli/main/install.sh | bash
-```
-
-### 2. Install samsara
+### 1. Install samsara
 
 **Linux / macOS**
 
@@ -42,46 +34,15 @@ curl -fsSL https://raw.githubusercontent.com/mocikadev/mocika-samsara/main/insta
 irm https://raw.githubusercontent.com/mocikadev/mocika-samsara/main/install.ps1 | iex
 ```
 
-Installs to `~/.local/bin/samsara` (Windows: `~\.local\bin\samsara.exe`). No Rust toolchain required; git must be in PATH. The install script automatically checks whether skm is present.
+The install script handles everything automatically:
+- Installs [`skm`](https://github.com/mocikadev/mocika-skills-cli) if not present
+- Initializes the knowledge base (`~/.agents/knowledge/`)
+- Installs the `self-evolution` skill
+- Injects MCP configuration for detected AI tools
 
-### 3. Initialize the knowledge base
+### 2. Restart your AI tool
 
-```bash
-samsara init
-```
-
-Creates `~/.agents/knowledge/`, injects the self-evolution protocol into `~/.agents/AGENTS.md`, and installs the `self-evolution` skill automatically.
-
-### 4. Configure MCP (let AI take over)
-
-**OpenCode** — edit `~/.config/opencode/opencode.json`:
-
-```json
-{
-  "$schema": "https://opencode.ai/config.json",
-  "mcp": {
-    "samsara": {
-      "type": "local",
-      "command": ["samsara", "mcp", "serve"]
-    }
-  }
-}
-```
-
-**Claude Code** — edit `~/.claude/claude_desktop_config.json`:
-
-```json
-{
-  "mcpServers": {
-    "samsara": {
-      "command": "samsara",
-      "args": ["mcp", "serve"]
-    }
-  }
-}
-```
-
-Restart your AI tool after saving. The samsara process is started on demand — no manual startup needed.
+Once the MCP config is written, restart your AI tool (OpenCode, Claude Code, etc.). The samsara process starts on demand — no manual startup needed.
 
 ---
 
