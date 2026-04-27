@@ -41,7 +41,7 @@ case "${LANG:-}" in
     MSG_DOWNLOAD_FAIL="下载失败，请检查网络或版本号是否正确。"
     MSG_INSTALLED="已安装："
     MSG_PATH_WARN="%s 不在 \$PATH 中，请将以下内容加入 ~/.bashrc 或 ~/.zshrc："
-    MSG_PATH_ADDED="%s 已自动写入 %s，重新打开终端后生效。"
+    MSG_PATH_ADDED="%s 已自动写入 %s，重新打开终端或运行 source %s 后生效。"
     MSG_PATH_FALLBACK="%s 不在 \$PATH 中，请手动将以下内容加入 shell 配置文件："
     MSG_DONE="完成！"
     MSG_HINT="运行 %ssamsara --help%s 开始使用。"
