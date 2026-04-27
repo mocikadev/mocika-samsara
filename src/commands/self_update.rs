@@ -224,7 +224,7 @@ fn replace_current_exe(new_binary: &Path, exe_path: &Path) -> Result<(), Samsara
     {
         let temp_target = exe_path.with_extension("tmp");
         fs::copy(new_binary, &temp_target)?;
-        let permissions = fs::metadata(new_binary)?.permissions();
+        let permissions = fs::metadata(exe_path)?.permissions();
         fs::set_permissions(&temp_target, permissions)?;
         fs::rename(&temp_target, exe_path)?;
         Ok(())
