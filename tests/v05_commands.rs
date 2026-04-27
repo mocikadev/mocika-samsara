@@ -34,12 +34,10 @@ fn init_injects_opencode_mcp_config() {
         .assert()
         .success();
 
-    let content =
-        std::fs::read_to_string(opencode_dir.join("opencode.json")).unwrap();
+    let content = std::fs::read_to_string(opencode_dir.join("opencode.json")).unwrap();
     let v: serde_json::Value = serde_json::from_str(&content).unwrap();
     assert_eq!(
-        v["mcp"]["samsara"]["type"],
-        "local",
+        v["mcp"]["samsara"]["type"], "local",
         "opencode.json should contain samsara MCP entry"
     );
     assert_eq!(
@@ -62,11 +60,18 @@ fn init_mcp_injection_is_idempotent() {
     )
     .unwrap();
 
-    samsara(&kh, &fake_home).arg("init").arg("--yes").assert().success();
-    samsara(&kh, &fake_home).arg("init").arg("--yes").assert().success();
+    samsara(&kh, &fake_home)
+        .arg("init")
+        .arg("--yes")
+        .assert()
+        .success();
+    samsara(&kh, &fake_home)
+        .arg("init")
+        .arg("--yes")
+        .assert()
+        .success();
 
-    let content =
-        std::fs::read_to_string(opencode_dir.join("opencode.json")).unwrap();
+    let content = std::fs::read_to_string(opencode_dir.join("opencode.json")).unwrap();
     let v: serde_json::Value = serde_json::from_str(&content).unwrap();
     let mcp_obj = v["mcp"].as_object().unwrap();
     assert_eq!(
@@ -92,7 +97,10 @@ fn init_injects_claude_mcp_config() {
         .success();
 
     let config_path = claude_dir.join("claude_desktop_config.json");
-    assert!(config_path.exists(), "claude_desktop_config.json should be created");
+    assert!(
+        config_path.exists(),
+        "claude_desktop_config.json should be created"
+    );
 
     let content = std::fs::read_to_string(&config_path).unwrap();
     let v: serde_json::Value = serde_json::from_str(&content).unwrap();
@@ -121,7 +129,9 @@ fn init_mcp_skips_when_tool_dir_absent() {
         "should not create opencode.json when opencode dir is absent"
     );
     assert!(
-        !fake_home.join(".claude/claude_desktop_config.json").exists(),
+        !fake_home
+            .join(".claude/claude_desktop_config.json")
+            .exists(),
         "should not create claude config when .claude dir is absent"
     );
 }

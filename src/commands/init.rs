@@ -1,7 +1,7 @@
 use crate::{cli::InitArgs, config::Config, error::SamsaraError};
+use serde_json::Value;
 use std::path::Path;
 use std::process::Command;
-use serde_json::Value;
 
 const SEED_DOMAINS: &[&str] = &[
     "rust",
